@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>MY TV ONLINE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* สไตล์แบบ Minimal ดำ-ขาว ตามที่คุณชอบ */
+        body { 
+            background-color: #000; 
+            color: #fff; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+        h2 { margin-top: 30px; font-weight: 300; letter-spacing: 2px; }
+        .grid-container { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 20px; 
+            padding: 20px; 
+            max-width: 500px; 
+            width: 100%;
+        }
+        .channel-card { 
+            background: #111; 
+            border: 1px solid #333; 
+            border-radius: 15px; 
+            padding: 20px; 
+            text-align: center; 
+            text-decoration: none; 
+            color: #fff; 
+            transition: 0.3s;
+        }
+        .channel-card:active { transform: scale(0.95); background: #222; }
+        .channel-card img { 
+            width: 100%; 
+            max-width: 80px; 
+            height: auto; 
+            margin-bottom: 10px; 
+            filter: grayscale(20%);
+        }
+        .channel-name { font-size: 14px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h2>SELECT CHANNEL</h2>
+
+    <div class="grid-container">
+        <a href="asian.html" class="channel-card">
+            <img src="https://gigatv.3bbtv.co.th/en/wp-content/themes/changwattana/img/channel/new2025/Asian-Hits.png" alt="Asian Hits">
+            <div class="channel-name">3BB ASIAN</div>
+        </a>
+
+        <a href="cinemax.html" class="channel-card">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/f/f0/611-cinemax.png" alt="Cinemax">
+            <div class="channel-name">CINEMAX</div>
+        </a>
+    </div>
+
+</body>
+</html>
+
