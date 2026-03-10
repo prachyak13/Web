@@ -2,10 +2,11 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>MY PRIVATE PLAYER</title> <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
+    <title>ASIAN HITS - MY PLAYER</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
     
-    <script src="https://cdn.jsdelivr.net/npm/@clappr/player@0.4.0/dist/clappr.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/shaka-player@2.5.10/dist/shaka-player.compiled.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@clappr/player@latest/dist/clappr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/shaka-player@latest/dist/shaka-player.compiled.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/clappr/dash-shaka-playback@latest/dist/dash-shaka-playback.external.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/level-selector@latest/dist/level-selector.min.js"></script>
 
@@ -15,9 +16,7 @@
     </style>
 </head>
 <body>
-
     <div id="player"></div>
-
     <script>
         var player = new Clappr.Player({
             source: 'https://cco-streamer1.cdn.3bbtv.com:8443/3bb/live/101/101.mpd',
@@ -34,6 +33,10 @@
                 }
             },
             parentId: '#player'
+        });
+    </script>
+</body>
+</html>
         });
     </script>
 </body>
