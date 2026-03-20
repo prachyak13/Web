@@ -2,87 +2,103 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>M3U PLAYER PRO</title>
+    <title>SMART M3U8 PLAYER</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
     
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; }
-        video { width: 100%; height: 100vh; object-fit: contain; }
-        #status { position: absolute; top: 10px; left: 10px; color: #00ff00; background: rgba(0,0,0,0.7); padding: 5px 15px; border-radius: 5px; font-family: monospace; z-index: 100; font-size: 14px; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; overflow: hidden; font-family: sans-serif; }
+        #player-wrapper { position: relative; width: 100%; height: 100vh; display: flex; justify-content: center; align-items: center; }
+        video { width: 100%; height: 100%; object-fit: contain; }
+        
+        /* แถบสถานะ */
+        #status { 
+            position: absolute; top: 10px; left: 10px; 
+            background: rgba(0,0,0,0.7); color: #00ff00; 
+            padding: 6px 12px; border-radius: 4px; font-size: 12px; 
+            z-index: 10; border: 1px solid #00ff00;
+        }
+
+        /* ปุ่มวิธีแก้ไข */
+        #fix-btn {
+            position: absolute; bottom: 20px; right: 20px;
+            background: rgba(255,255,255,0.2); color: #fff;
+            border: 1px solid #fff; padding: 10px 20px;
+            border-radius: 30px; cursor: pointer; z-index: 10;
+            font-size: 14px; transition: 0.3s;
+        }
+        #fix-btn:hover { background: #fff; color: #000; }
     </style>
 </head>
 <body>
 
-    <div id="status">กำลังโหลด M3U...</div>
-    <video id="video" controls autoplay playsinline></video>
+    <div id="player-wrapper">
+        <div id="status">กำลังเชื่อมต่อ GitHub...</div>
+        <video id="video" controls autoplay playsinline></video>
+        <button id="fix-btn" onclick="alert('วิธีแก้จอดำ/หมุนค้าง:\n1. คลิกไอคอน แม่กุญแจ หน้าชื่อเว็บ\n2. เลือก Site Settings\n3. หา Insecure Content แล้วเปลี่ยนเป็น Allow\n4. รีเฟรชหน้าเว็บอีกครั้ง')">💡 ดูไม่ได้? คลิกที่นี่</button>
+    </div>
 
     <script>
         const video = document.getElementById('video');
         const status = document.getElementById('status');
-        // ลิงก์ GitHub Raw ของคุณ
-        const GITHUB_SOURCE = 'https://raw.githubusercontent.com/prachyak13/server195/main/truespotv2';
+        
+        // ลิงก์ Raw ที่คุณส่งมา
+        const GITHUB_RAW = 'https://raw.githubusercontent.com/prachyak13/server195/main/truespotv2';
 
-        async function initPlayer() {
+        async function startApp() {
             try {
-                // 1. ดึงข้อมูลจากไฟล์ใน GitHub
-                const response = await fetch(GITHUB_SOURCE);
+                // 1. ดึงข้อมูลจากไฟล์ GitHub
+                const response = await fetch(GITHUB_RAW);
                 const text = await response.text();
                 
-                // 2. ค้นหาบรรทัดที่เป็นลิงก์ http (กรองจากไฟล์ M3U)
+                // 2. ค้นหาบรรทัดที่เป็นลิงก์ http://...
                 const streamUrl = text.split('\n').find(line => line.trim().startsWith('http')).trim();
 
                 if (!streamUrl) {
-                    status.innerText = "❌ ไม่พบลิงก์ในไฟล์ M3U";
+                    status.innerText = "❌ ไม่พบลิงก์วิดีโอในไฟล์";
                     return;
                 }
 
-                status.innerText = "กำลังเชื่อมต่อ Stream...";
+                status.innerText = "กำลังโหลดสตรีม...";
 
                 // 3. เริ่มการทำงานของ Hls.js
                 if (Hls.isSupported()) {
                     const hls = new Hls({
-                        debug: false,
-                        enableWorker: true,
-                        lowLatencyMode: true
+                        manifestLoadingMaxRetry: 5,
+                        enableWorker: true
                     });
                     
                     hls.loadSource(streamUrl);
                     hls.attachMedia(video);
                     
-                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                        status.innerText = "กำลังรับชม";
+                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                        status.innerText = "● LIVE";
                         video.play().catch(() => {
-                            status.innerText = "⚠️ โปรดกด Play เพื่อเริ่มดู";
+                            status.innerText = "⚠️ โปรดกด Play";
                         });
-                        // ซ่อนแถบสถานะหลังจากเล่นไป 3 วินาที
-                        setTimeout(() => status.style.display = 'none', 3000);
                     });
 
-                    hls.on(Hls.Events.ERROR, function (event, data) {
+                    hls.on(Hls.Events.ERROR, (event, data) => {
                         if (data.fatal) {
-                            status.innerText = "❌ เกิดข้อผิดพลาด: " + data.type;
-                            hls.recoverMediaError();
+                            status.innerText = "❌ Network Error (ต้อง Allow Insecure Content)";
+                            console.error("HLS Error:", data);
                         }
                     });
 
                 } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    // สำหรับ Safari บน iOS/Mac ที่เล่น m3u8 ได้เอง
+                    // สำหรับ Safari/iOS
                     video.src = streamUrl;
-                    video.addEventListener('loadedmetadata', function() {
-                        video.play();
-                        status.style.display = 'none';
-                    });
+                    video.addEventListener('loadedmetadata', () => video.play());
                 }
 
             } catch (err) {
-                status.innerText = "❌ ติดปัญหา CORS หรือ GitHub ล่ม";
+                status.innerText = "❌ ไม่สามารถเข้าถึงไฟล์ GitHub ได้";
                 console.error(err);
             }
         }
 
-        initPlayer();
+        startApp();
     </script>
 </body>
 </html>
