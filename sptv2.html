@@ -1,65 +1,31 @@
 <!DOCTYPE html>
-<html lang="th">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>MY HLS PLAYER</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Clappr Player -->
-    <script src="https://cdn.jsdelivr.net/npm/@clappr/player@latest/dist/clappr.min.js"></script>
-
-    <!-- Level Selector (เลือกความชัด) -->
-    <script src="https://cdn.jsdelivr.net/npm/clappr-level-selector-plugin@latest/dist/level-selector.min.js"></script>
-
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            background: #000;
-            height: 100%;
-            overflow: hidden;
-        }
-        #player {
-            width: 100%;
-            height: 100vh;
-        }
-    </style>
+    <title>HLS Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
+<body style="margin:0;background:black;">
 
-<body>
-
-<div id="player"></div>
+<video id="video" controls autoplay style="width:100%;height:100vh;"></video>
 
 <script>
-    var player = new Clappr.Player({
-        source: 'http://195.128.27.141:80/live/29635847216070086058/5jq68fox8okip6k08rbs/1776069.m3u8',
-        mimeType: 'application/x-mpegURL',
+var video = document.getElementById('video');
+var url = 'http://195.128.27.141:80/live/29635847216070086058/5jq68fox8okip6k08rbs/1776069.m3u8';
 
-        parentId: '#player',
-        width: '100%',
-        height: '100%',
-        autoPlay: true,
-
-        plugins: [LevelSelector],
-
-        playback: {
-            playInline: true,
-            hlsjsConfig: {
-                maxBufferLength: 30,
-                liveSyncDurationCount: 3
-            }
-        }
+if (Hls.isSupported()) {
+    var hls = new Hls();
+    hls.loadSource(url);
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED, function() {
+        video.play();
     });
-
-    // 🔁 Auto reload ถ้าสตรีมดับ
-    player.on(Clappr.Events.PLAYER_ERROR, function() {
-        console.log('Stream error, reloading...');
-        setTimeout(function() {
-            player.load(player.options.source);
-            player.play();
-        }, 3000);
+} else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = url;
+    video.addEventListener('loadedmetadata', function() {
+        video.play();
     });
-
+}
 </script>
 
 </body>
