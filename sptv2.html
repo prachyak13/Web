@@ -1,41 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-<title>Mono Plus</title>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta content="IE=edge" http-equiv="X-UA-Compatible">
-<script src="//ssl.p.jwpcdn.com/player/v/8.26.0/jwplayer.js"></script>
-<script> jwplayer.key = 'XSuP4qMl+9tK17QNb+4+th2Pm9AWgMO/cYH8CI0HGGr7bdjo';
-</script>
-<div id="player"></div>
-<script>
-    var playerInstance = jwplayer("player");
+    <meta charset="UTF-8">
+    <title>Sport V2 - Fixed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+        video { width: 100%; height: 100%; object-fit: contain; }
+    </style>
+</head>
+<body>
 
-    playerInstance.setup({
+    <video id="video" controls autoplay playsinline></video>
 
-        playlist: [{
-"image": "https://www.dropbox.com/scl/fi/563mscujyrmynb03qvwtp/wandering-oldman-logo.png?rlkey=a6v56e1rgt96luwlzqe2ofbfi&dl=1",
-"sources": [
-{
-"default": true,
-"type": "hls",
-"file": 'http://195.128.27.141:80/live/29635847216070086058/5jq68fox8okip6k08rbs/1776069.m3u8',
-"label": "1"
-}
-]
-}],
-logo: { file: "https://dl.dropbox.com/scl/fi/uydidwzleznktuq5btwwe/logo-4.jpg?rlkey=nvqxtzx2vc2dwoc5phvm02y7y&dl=0", position: 'bottom-right' },
- width: "100%",
-        height: "100%",
-        aspectratio: "16:9",
-        mute: false,
-        autostart: true,
-        cast: {},
-    });
-    if (getLang == "") {
-   lang = 1;
-  }
-  jwplayer().on('play', function(e) {
-    jwplayer().setCurrentAudioTrack(lang);
-  });
-</script>
+    <script>
+        var video = document.getElementById('video');
+        // ลิงก์สดของคุณ
+        var streamUrl = 'http://195.128.27.141:80/live/29635847216070086058/5jq68fox8okip6k08rbs/1776069.m3u8';
+
+        if (Hls.isSupported()) {
+            var hls = new Hls();
+            hls.loadSource(streamUrl);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                video.play();
+            });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = streamUrl;
+            video.addEventListener('loadedmetadata', function() {
+                video.play();
+            });
+        }
+    </script>
+</body>
+</html>
