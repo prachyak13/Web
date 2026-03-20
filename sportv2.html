@@ -2,65 +2,36 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>SPORT V2 - DIRECT PLAYER</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    
+    <title>True Sport 2 - Live</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; }
-        video { width: 100%; height: 100vh; background: #000; }
-        #overlay { position: absolute; top: 15px; left: 15px; color: #00ff00; background: rgba(0,0,0,0.6); padding: 5px 12px; border-radius: 4px; font-family: monospace; font-size: 12px; z-index: 10; border: 1px solid #00ff00; pointer-events: none; }
+        body { margin: 0; background: #000; overflow: hidden; }
+        #player { width: 100%; height: 100vh; }
     </style>
 </head>
 <body>
 
-    <div id="overlay">กำลังเชื่อมต่อ Server 195...</div>
-    <video id="video" controls autoplay playsinline></video>
+<div id="player">
+    <video id="video" controls autoplay playsinline style="width:100%; height:100%;"></video>
+</div>
 
-    <script>
-        const video = document.getElementById('video');
-        const overlay = document.getElementById('overlay');
+<script>
+    var video = document.getElementById('video');
+    
+    // *** จุดที่ต้องเปลี่ยน: ใส่ลิงก์สด Sport ของคุณที่นี่ ***
+    var streamUrl = 'http://195.128.27.141:80/live/29635847216070086058/5jq68fox8okip6k08rbs/1776069.m3u8';
 
-        // ลิงก์สดที่คุณส่งมา (Direct Link)
-        const streamUrl = 'http://195.128.27.141:80/live/29635847216070086058/5jq68fox8okip6k08rbs/1776069.m3u8';
+    if (Hls.isSupported()) {
+        var hls = new Hls();
+        hls.loadSource(streamUrl);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+            video.play();
+        });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = streamUrl;
+    }
+</script>
 
-        function startPlayer() {
-            if (Hls.isSupported()) {
-                var hls = new Hls({
-                    enableWorker: true,
-                    manifestLoadingMaxRetry: 10,
-                    fragLoadingMaxRetry: 10
-                });
-                
-                hls.loadSource(streamUrl);
-                hls.attachMedia(video);
-                
-                hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                    overlay.innerText = "● LIVE: TRUE SPORT";
-                    video.play().catch(() => {
-                        overlay.innerText = "⚠️ กรุณากด Play เพื่อรับชม";
-                    });
-                });
-
-                hls.on(Hls.Events.ERROR, function (event, data) {
-                    if (data.fatal) {
-                        overlay.innerText = "❌ ERROR: โปรดเช็คการตั้งค่า Insecure Content";
-                        hls.recoverMediaError();
-                    }
-                });
-
-            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                // สำหรับ Safari/iOS
-                video.src = streamUrl;
-                video.addEventListener('loadedmetadata', function() {
-                    video.play();
-                    overlay.innerText = "● LIVE (Native)";
-                });
-            }
-        }
-
-        startPlayer();
-    </script>
 </body>
 </html>
