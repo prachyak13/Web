@@ -2,60 +2,57 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>Sport V2 - GitHub Raw Player</title>
-    <script src="https://ssl.p.jwpcdn.com/player/v/8.26.0/jwplayer.js"></script>
-    <script>jwplayer.key = 'XSuP4qMl+9tK17QNb+4+th2Pm9AWgMO/cYH8CI0HGGr7bdjo';</script>
+    <title>Sport V2 - Fix Pass</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
-        #player { width: 100%; height: 100vh; }
+        video { width: 100%; height: 100%; object-fit: contain; }
+        #status { position: absolute; top: 10px; left: 10px; color: #0f0; background: rgba(0,0,0,0.6); padding: 5px 10px; font-size: 12px; z-index: 10; border: 1px solid #0f0; }
     </style>
 </head>
 <body>
 
-    <div id="player"></div>
+    <div id="status">กำลังดึงลิงก์จาก GitHub Raw...</div>
+    <video id="video" controls autoplay playsinline></video>
 
     <script>
-        // ลิงก์ Raw ที่คุณให้มา
-        const GITHUB_RAW = 'https://raw.githubusercontent.com/prachyak13/server195/refs/heads/main/truespotv2';
+        const video = document.getElementById('video');
+        const status = document.getElementById('status');
+        
+        // ลิงก์ Raw ของคุณ
+        const GITHUB_RAW = 'https://raw.githubusercontent.com/prachyak13/server195/main/truespotv2';
 
-        async function initApp() {
+        async function loadAndPlay() {
             try {
-                // 1. ดึงข้อมูลจาก GitHub Raw
                 const response = await fetch(GITHUB_RAW);
-                const data = await response.text();
-                
-                // 2. ค้นหาบรรทัดที่มี http (กรองเอาเฉพาะ URL วิดีโอ)
-                const lines = data.split('\n');
-                const streamUrl = lines.find(line => line.trim().startsWith('http')).trim();
+                const text = await response.text();
+                const streamUrl = text.split('\n').find(l => l.trim().startsWith('http')).trim();
 
-                if (!streamUrl) throw new Error("ไม่พบลิงก์วิดีโอ");
-
-                // 3. ตั้งค่า JW Player โดยใช้ลิงก์ที่ดึงมาได้
-                var playerInstance = jwplayer("player");
-                playerInstance.setup({
-                    playlist: [{
-                        "sources": [{
-                            "default": true,
-                            "type": "hls",
-                            "file": streamUrl,
-                            "label": "HD"
-                        }]
-                    }],
-                    width: "100%",
-                    height: "100%",
-                    aspectratio: "16:9",
-                    autostart: true,
-                    mute: false,
-                    cast: {},
-                });
-
+                if (Hls.isSupported()) {
+                    var hls = new Hls();
+                    hls.loadSource(streamUrl);
+                    hls.attachMedia(video);
+                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                        status.innerText = "● LIVE: กำลังเล่น";
+                        video.play();
+                    });
+                    
+                    // ดักจับ Error เพื่อบอกผู้ใช้
+                    hls.on(Hls.Events.ERROR, function(event, data) {
+                        if (data.fatal) {
+                            status.innerText = "❌ กรุณากดรูปแม่กุญแจแล้วเลือก Allow Insecure Content";
+                            status.style.color = "red";
+                            status.style.borderColor = "red";
+                        }
+                    });
+                }
             } catch (err) {
-                console.error("Error loading stream:", err);
-                document.body.innerHTML = "<div style='color:white; padding:20px;'>เกิดข้อผิดพลาด: ไม่สามารถดึงข้อมูลจาก GitHub ได้</div>";
+                status.innerText = "❌ ดึงข้อมูล Raw ไม่สำเร็จ";
             }
         }
 
-        initApp();
+        loadAndPlay();
     </script>
 </body>
 </html>
