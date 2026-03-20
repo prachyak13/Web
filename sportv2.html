@@ -2,57 +2,86 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>PRO PLAYER - SERVER 195</title>
+    <title>M3U PLAYER PRO</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
     
-    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; overflow: hidden; }
-        .video-js { width: 100% !important; height: 100vh !important; }
-        #status { position: absolute; top: 10px; left: 10px; color: #fff; background: rgba(0,0,0,0.5); padding: 5px 10px; z-index: 99; font-family: sans-serif; font-size: 12px; pointer-events: none; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        video { width: 100%; height: 100vh; object-fit: contain; }
+        #status { position: absolute; top: 10px; left: 10px; color: #00ff00; background: rgba(0,0,0,0.7); padding: 5px 15px; border-radius: 5px; font-family: monospace; z-index: 100; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div id="status">กำลังเชื่อมต่อกับ GitHub...</div>
-    <video id="my-video" class="video-js vjs-big-play-centered" controls preload="auto" data-setup='{}'></video>
+    <div id="status">กำลังโหลด M3U...</div>
+    <video id="video" controls autoplay playsinline></video>
 
     <script>
-        // 1. ลิงก์ไฟล์ Raw จาก GitHub ของคุณ
-        const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/prachyak13/server195/main/truespotv2';
+        const video = document.getElementById('video');
+        const status = document.getElementById('status');
+        // ลิงก์ GitHub Raw ของคุณ
+        const GITHUB_SOURCE = 'https://raw.githubusercontent.com/prachyak13/server195/main/truespotv2';
 
         async function initPlayer() {
-            const statusEl = document.getElementById('status');
             try {
-                // 2. ดึงข้อมูลจาก GitHub
-                const response = await fetch(GITHUB_RAW_URL);
+                // 1. ดึงข้อมูลจากไฟล์ใน GitHub
+                const response = await fetch(GITHUB_SOURCE);
                 const text = await response.text();
                 
-                // 3. กรองหาบรรทัดที่เป็น URL (http://...)
-                const lines = text.split('\n');
-                const streamUrl = lines.find(line => line.trim().startsWith('http')).trim();
+                // 2. ค้นหาบรรทัดที่เป็นลิงก์ http (กรองจากไฟล์ M3U)
+                const streamUrl = text.split('\n').find(line => line.trim().startsWith('http')).trim();
 
-                if (streamUrl) {
-                    statusEl.innerText = "กำลังเล่น: " + streamUrl.split('/').pop();
-                    
-                    var player = videojs('my-video');
-                    player.src({
-                        src: streamUrl,
-                        type: 'application/x-mpegURL' // สำหรับไฟล์ .m3u8
-                    });
-                    player.play();
-                } else {
-                    statusEl.innerText = "❌ ไม่พบ URL ในไฟล์";
+                if (!streamUrl) {
+                    status.innerText = "❌ ไม่พบลิงก์ในไฟล์ M3U";
+                    return;
                 }
-            } catch (error) {
-                console.error(error);
-                statusEl.innerText = "❌ เกิดข้อผิดพลาดในการดึงข้อมูล";
+
+                status.innerText = "กำลังเชื่อมต่อ Stream...";
+
+                // 3. เริ่มการทำงานของ Hls.js
+                if (Hls.isSupported()) {
+                    const hls = new Hls({
+                        debug: false,
+                        enableWorker: true,
+                        lowLatencyMode: true
+                    });
+                    
+                    hls.loadSource(streamUrl);
+                    hls.attachMedia(video);
+                    
+                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                        status.innerText = "กำลังรับชม";
+                        video.play().catch(() => {
+                            status.innerText = "⚠️ โปรดกด Play เพื่อเริ่มดู";
+                        });
+                        // ซ่อนแถบสถานะหลังจากเล่นไป 3 วินาที
+                        setTimeout(() => status.style.display = 'none', 3000);
+                    });
+
+                    hls.on(Hls.Events.ERROR, function (event, data) {
+                        if (data.fatal) {
+                            status.innerText = "❌ เกิดข้อผิดพลาด: " + data.type;
+                            hls.recoverMediaError();
+                        }
+                    });
+
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    // สำหรับ Safari บน iOS/Mac ที่เล่น m3u8 ได้เอง
+                    video.src = streamUrl;
+                    video.addEventListener('loadedmetadata', function() {
+                        video.play();
+                        status.style.display = 'none';
+                    });
+                }
+
+            } catch (err) {
+                status.innerText = "❌ ติดปัญหา CORS หรือ GitHub ล่ม";
+                console.error(err);
             }
         }
 
-        // เริ่มทำงาน
         initPlayer();
     </script>
 </body>
